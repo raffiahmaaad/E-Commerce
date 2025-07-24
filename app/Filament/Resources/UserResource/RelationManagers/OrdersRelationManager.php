@@ -49,7 +49,8 @@ class OrdersRelationManager extends RelationManager
                 'shipped' => 'heroicon-m-truck',
                 'delivered' => 'heroicon-m-check-badge',
                 'cancelled' => 'heroicon-m-x-circle'
-            }),
+            })
+            ->sortable(),
 
             ])
             ->filters([
