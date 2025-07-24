@@ -37,7 +37,7 @@ use App\Filament\Widgets\OrderStats;
 class OrderResource extends Resource
 {
     protected static ?string $model = Order::class;
-
+    
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
 
     // protected static ?string $navigationGroup = 'Orders';
@@ -62,8 +62,8 @@ class OrderResource extends Resource
                             ->label('Payment Method')
                             ->options([
                                 'QRIS' => 'QRIS',
-                                'paypal' => 'PayPal',
-                                'bank_transfer' => 'Bank Transfer',
+                                'PayPal' => 'PayPal',
+                                'Bank Transfer' => 'Bank Transfer',
                             ])
                             ->required(),
 
@@ -218,76 +218,75 @@ class OrderResource extends Resource
     }
 
     public static function table(Table $table): Table
-    {
-        return $table
-            ->columns([
-                TextColumn::make('user.name')
-                    ->label('Customer')
-                    ->sortable()
-                    ->searchable(),
+{
+    return $table
+        ->columns([
+            TextColumn::make('user.name')
+                ->label('Customer')
+                ->sortable()
+                ->searchable(),
 
-                TextColumn::make('grand_total')
-                    ->label('Totals')
-                    ->numeric()
-                    ->sortable()
-                    ->money('IDR')
-                    ->getStateUsing(function ($record) {
-                        // Fallback: jika grand_total kosong, hitung dari items
-                        if (!$record->grand_total || $record->grand_total == 0) {
-                            return $record->items->sum('total_amount');
-                        }
-                        return $record->grand_total;
-                    }),
+            // --- PERBAIKAN UTAMA ADA DI SINI ---
+            TextColumn::make('grand_total')
+                ->label('Totals')
+                ->numeric()
+                ->sortable()
+                ->money('IDR')
+                ->getStateUsing(function ($record) {
+                    // Selalu hitung ulang total dari relasi 'items' untuk data realtime.
+                    // Ini memastikan nilai yang ditampilkan di tabel selalu akurat.
+                    return $record->items->sum('total_amount');
+                }),
 
-                TextColumn::make('payment_method')
-                    ->searchable()
-                    ->sortable(),
+            TextColumn::make('payment_method')
+                ->searchable()
+                ->sortable(),
 
-                TextColumn::make('payment_status')
-                    ->searchable()
-                    ->sortable(),
+            TextColumn::make('payment_status')
+                ->searchable()
+                ->sortable(),
 
-                TextColumn::make('shipping_method')
-                    ->searchable()
-                    ->sortable(),
+            TextColumn::make('shipping_method')
+                ->searchable()
+                ->sortable(),
 
-                SelectColumn::make('status')
-                    ->options([
-                        'new' => 'New',
-                        'processing' => 'Processing',
-                        'shipped' => 'Shipped',
-                        'delivered' => 'Delivered',
-                        'cancelled' => 'Cancelled',
-                    ])
-                    ->searchable()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                //
-            ])
-            ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\EditAction::make(),
-                    Tables\Actions\ViewAction::make(),
-                    Tables\Actions\DeleteAction::make(),
+            SelectColumn::make('status')
+                ->options([
+                    'new' => 'New',
+                    'processing' => 'Processing',
+                    'shipped' => 'Shipped',
+                    'delivered' => 'Delivered',
+                    'cancelled' => 'Cancelled',
                 ])
+                ->searchable()
+                ->sortable(),
+
+            Tables\Columns\TextColumn::make('created_at')
+                ->dateTime()
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
+
+            Tables\Columns\TextColumn::make('updated_at')
+                ->dateTime()
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
+        ])
+        ->filters([
+            //
+        ])
+        ->actions([
+            Tables\Actions\ActionGroup::make([
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
-    }
+        ])
+        ->bulkActions([
+            Tables\Actions\BulkActionGroup::make([
+                Tables\Actions\DeleteBulkAction::make(),
+            ]),
+        ]);
+}
 
     public static function getRelations(): array
     {

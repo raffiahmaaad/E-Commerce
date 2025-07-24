@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\OrderResource\Widgets;
 
 use App\Models\Order;
+use App\Models\OrderItem;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\DB;
@@ -10,16 +11,16 @@ use Illuminate\Support\Facades\DB;
 class OrderStats extends BaseWidget
 {
     /**
-     * Membuat seluruh widget (angka dan grafik) diperbarui otomatis setiap 15 detik.
+     * Membuat seluruh widget diperbarui otomatis.
+     * Mengubah ke 1 detik bisa memberatkan server, 5-15 detik biasanya cukup.
      */
-    protected static ?string $pollingInterval = '15s';
+    protected static ?string $pollingInterval = '5s';
 
     /**
-     * Fungsi asli Anda, dengan sedikit perbaikan untuk menangani jika belum ada data.
+     * Fungsi asli Anda untuk memformat angka.
      */
     private function formatCompactNumber(int|float|null $number): string
     {
-        // Jika angka null atau 0, kembalikan '0' untuk mencegah error
         if (is_null($number) || $number == 0) {
             return '0';
         }
@@ -32,14 +33,13 @@ class OrderStats extends BaseWidget
             return round($number / 1000, 1) . 'K';
         }
 
-        return round($number / 1000000, 15) . 'JT';
+        return round($number / 1000000, 1) . 'JT';
     }
 
     protected function getStats(): array
     {
-        // --- PENAMBAHAN: Mengambil data untuk semua grafik 7 hari terakhir ---
+        // --- Mengambil data untuk semua grafik 7 hari terakhir ---
 
-        // Grafik untuk Total Pesanan Harian
         $totalOrdersData = Order::query()
             ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
             ->groupBy('date')
@@ -48,7 +48,6 @@ class OrderStats extends BaseWidget
             ->pluck('count')
             ->toArray();
 
-        // Grafik untuk Pesanan Diproses
         $processingData = Order::query()
             ->where('status', 'processing')
             ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
@@ -58,7 +57,6 @@ class OrderStats extends BaseWidget
             ->pluck('count')
             ->toArray();
 
-        // Grafik untuk Pesanan Dikirim
         $shippedData = Order::query()
             ->where('status', 'shipped')
             ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
@@ -68,22 +66,36 @@ class OrderStats extends BaseWidget
             ->pluck('count')
             ->toArray();
 
-        // Grafik untuk Rata-rata Harga Harian
-        $avgPriceData = Order::query()
-            ->select(DB::raw('DATE(created_at) as date'), DB::raw('avg(grand_total) as average'))
+        // --- PERBAIKAN: Grafik pendapatan diambil dari total item DAN difilter 'paid' ---
+        $totalRevenueData = OrderItem::query()
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->where('orders.payment_status', 'paid') // Filter 'paid' ditambahkan
+            ->select(DB::raw('DATE(orders.created_at) as date'), DB::raw('sum(order_items.total_amount) as revenue'))
             ->groupBy('date')
             ->orderBy('date', 'asc')
-            ->where('created_at', '>=', now()->subDays(7))
-            ->pluck('average')
+            ->where('orders.created_at', '>=', now()->subDays(7))
+            ->pluck('revenue')
             ->toArray();
 
 
         return [
+            // --- PERBAIKAN: Statistik pendapatan diambil dari total item DAN difilter 'paid' ---
+            Stat::make('Total Revenue', 'IDR ' . $this->formatCompactNumber(
+                OrderItem::query()
+                    ->join('orders', 'order_items.order_id', '=', 'orders.id')
+                    ->where('orders.payment_status', 'paid') // Filter 'paid' ditambahkan
+                    ->sum('order_items.total_amount')
+            ))
+                ->description('Total pendapatan dari pesanan lunas')
+                ->descriptionIcon('heroicon-m-chart-bar-square')
+                ->color('success')
+                ->chart($totalRevenueData),
+
             Stat::make('Orders', Order::count())
-                ->description('Total semua pesanan')
+                ->description('Jumlah semua pesanan')
                 ->descriptionIcon('heroicon-m-shopping-bag')
                 ->color('primary')
-                ->chart($totalOrdersData), // GRAFIK DITAMBAHKAN
+                ->chart($totalOrdersData),
 
             Stat::make('Order Processing', Order::query()->where('status', 'processing')->count())
                 ->description('Pesanan sedang diproses')
@@ -96,12 +108,6 @@ class OrderStats extends BaseWidget
                 ->descriptionIcon('heroicon-m-truck')
                 ->color('success')
                 ->chart($shippedData),
-
-            Stat::make('Average Price', 'IDR ' . $this->formatCompactNumber(Order::avg('grand_total')))
-                ->description('Rata-rata harga pesanan')
-                ->descriptionIcon('heroicon-m-banknotes')
-                ->color('success')
-                ->chart($avgPriceData), // GRAFIK DITAMBAHKAN
         ];
     }
 }
