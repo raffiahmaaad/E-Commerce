@@ -37,7 +37,7 @@ class OrderStats extends BaseWidget
                 ->color('danger'),
             Stat::make('Order Processing', Order::query()->where('status', 'processing')->count()),
             Stat::make('Order Shipped', Order::query()->where('status', 'shipped')->count()),
-            Stat::make('Average Price', 'IDR ' . $this->formatCompactNumber(Order::avg('grand_total'))) // <-- PERUBAHAN DI SINI
+            Stat::make('Average Price', 'IDR ' . $this->formatCompactNumber(Order::avg('grand_total')))
                 ->description('3% increase')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('success'),
