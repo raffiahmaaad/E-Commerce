@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\OrderResource\Pages;
 use App\Filament\Resources\OrderResource\RelationManagers;
 use App\Filament\Resources\OrderResource\RelationManagers\AddressRelationManager;
+use App\Filament\Resources\OrderResource\Widgets\OrderStats as WidgetsOrderStats;
 use App\Models\Order;
 use App\Models\Product;
 use Filament\Forms;
@@ -31,12 +32,16 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Number;
 use Livewire\Attributes\Reactive;
+use App\Filament\Widgets\OrderStats;
 
 class OrderResource extends Resource
 {
     protected static ?string $model = Order::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
+
+    protected static ?int $navigationSort = 3;
+
 
     public static function form(Form $form): Form
     {
@@ -299,7 +304,12 @@ class OrderResource extends Resource
         return static::getModel()::count() > 10 ? 'success' : 'danger';
     }
 
-    
+    public static function getWidgets(): array
+        {
+            return [
+                WidgetsOrderStats::class, // <--- PASTIKAN HANYA INI YANG ADA DI SINI
+            ];
+        }
 
     public static function getPages(): array
     {
