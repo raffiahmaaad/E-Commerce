@@ -1,107 +1,133 @@
 <?php
 
-namespace Database\Seeders;
+namespace App\Filament\Resources;
 
-use Illuminate\Database\Seeder;
+use App\Filament\Resources\BrandResource\Pages;
+use App\Filament\Resources\BrandResource\RelationManagers;
 use App\Models\Brand;
+use Filament\Forms;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Form;
+use Filament\Forms\Set;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
-class BrandSeeder extends Seeder
+class BrandResource extends Resource
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run(): void
-    {
-        $brands = [
-            [
-                'name' => 'Apple',
-                'slug' => 'apple',
-                'image' => null, // Anda bisa menambahkan path gambar jika ada
-                'is_active' => true,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'name' => 'Samsung',
-                'slug' => 'samsung',
-                'image' => null,
-                'is_active' => true,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'name' => 'Xiaomi',
-                'slug' => 'xiaomi',
-                'image' => null,
-                'is_active' => true,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'name' => 'Oppo',
-                'slug' => 'oppo',
-                'image' => null,
-                'is_active' => true,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'name' => 'Vivo',
-                'slug' => 'vivo',
-                'image' => null,
-                'is_active' => true,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'name' => 'Huawei',
-                'slug' => 'huawei',
-                'image' => null,
-                'is_active' => true,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'name' => 'Google',
-                'slug' => 'google',
-                'image' => null,
-                'is_active' => true,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'name' => 'OnePlus',
-                'slug' => 'oneplus',
-                'image' => null,
-                'is_active' => true,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'name' => 'Sony',
-                'slug' => 'sony',
-                'image' => null,
-                'is_active' => true,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'name' => 'Realme',
-                'slug' => 'realme',
-                'image' => null,
-                'is_active' => true,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-        ];
+    protected static ?string $model = Brand::class;
 
-        foreach ($brands as $brandData) {
-            Brand::updateOrCreate(
-                ['slug' => $brandData['slug']], // Cari berdasarkan slug
-                $brandData
-            );
-        }
+    // TAMBAHKAN 3 BARIS DI BAWAH INI
+    protected static ?string $navigationIcon = 'heroicon-o-computer-desktop';
+
+    protected static ?string $navigationGroup = 'Catalogs';
+
+    protected static ?int $navigationSort = 5;
+
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Section::make([
+                    Grid::make()
+                        ->schema([
+                            Forms\Components\TextInput::make('name')
+                                ->required()
+                                ->live(onBlur: true)
+                                ->afterStateUpdated(function (string $operation, $state, Set $set) {
+                                if ($operation !== 'create') {
+                                    return;
+                                }
+                                $set('slug', Str::slug($state));
+                                })
+                                ->maxLength(255),
+
+                            Forms\Components\TextInput::make('slug')
+                                ->required()
+                                ->disabled()
+                                ->dehydrated()
+                                ->unique(ignoreRecord: True)
+                                ->maxLength(255),
+                        ]),
+                            Forms\Components\FileUpload::make('image')
+                                ->image()
+                                ->required()
+                                ->directory('categories'),
+
+                            Forms\Components\Toggle::make('is_active')
+                                ->required()
+                                ->label('Is Active')
+                                ->default(true),
+                ])
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('name')
+                    ->sortable()
+                    ->searchable(),
+
+                Tables\Columns\ImageColumn::make('image')
+                    ->sortable()
+                    ->label('Image'),
+
+                Tables\Columns\TextColumn::make('slug')
+                    ->sortable()
+                    ->searchable(),
+
+                Tables\Columns\IconColumn::make('is_active')
+                    ->sortable()
+                    ->boolean()
+                    ->label('Is Active'),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                //
+            ])
+            ->actions([
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\DeleteAction::make(),
+                ]),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListBrands::route('/'),
+            'create' => Pages\CreateBrand::route('/create'),
+            'edit' => Pages\EditBrand::route('/{record}/edit'),
+        ];
     }
 }
