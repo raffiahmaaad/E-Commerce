@@ -1,0 +1,23 @@
+# Node & frontend
+node_modules
+dist
+build
+coverage
+.next
+.nuxt
+*.min.js
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# PHP / Laravel
+vendor
+storage
+.env
+.phpunit.result.cache
+
+# Others
+*.log
+.idea
+.vscode
+.DS_Store
