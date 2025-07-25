@@ -44,6 +44,8 @@ class OrderResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
+    // protected static ?string $recordTitleAttribute = 'payment_method';
+
 
     public static function form(Form $form): Form
     {

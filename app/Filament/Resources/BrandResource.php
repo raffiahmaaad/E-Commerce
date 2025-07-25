@@ -28,6 +28,8 @@ class BrandResource extends Resource
 
     protected static ?int $navigationSort = 5;
 
+    protected static ?string $recordTitleAttribute = 'name';
+
 
     public static function form(Form $form): Form
     {
