@@ -60,12 +60,10 @@ class UserResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->sortable()
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('email')
                     ->label('Email Address')
-                    ->sortable()
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('created_at')

@@ -37,7 +37,7 @@ use App\Filament\Widgets\OrderStats;
 class OrderResource extends Resource
 {
     protected static ?string $model = Order::class;
-    
+
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
 
     // protected static ?string $navigationGroup = 'Orders';
@@ -223,7 +223,6 @@ class OrderResource extends Resource
         ->columns([
             TextColumn::make('user.name')
                 ->label('Customer')
-                ->sortable()
                 ->searchable(),
 
             // --- PERBAIKAN UTAMA ADA DI SINI ---
@@ -239,16 +238,14 @@ class OrderResource extends Resource
                 }),
 
             TextColumn::make('payment_method')
-                ->searchable()
-                ->sortable(),
+                ->searchable(),
 
             TextColumn::make('payment_status')
                 ->searchable()
                 ->sortable(),
 
             TextColumn::make('shipping_method')
-                ->searchable()
-                ->sortable(),
+                ->searchable(),
 
             SelectColumn::make('status')
                 ->options([
