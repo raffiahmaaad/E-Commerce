@@ -64,7 +64,6 @@ class LatestOrders extends BaseWidget
                     ->label('Order Date')
                     ->dateTime(),
 
-
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
